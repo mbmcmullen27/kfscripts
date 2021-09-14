@@ -1,0 +1,9 @@
+# dont startx until the image is built and running
+ok=0
+
+while [[ $ok != 200 || -z $ok ]]; do
+    echo loading...
+    ok=$(curl -I 192.168.1.77:3000 | head -n 1 | awk -F ' ' '{print $2}')
+    sleep 10
+done
+startx -- -nocursor

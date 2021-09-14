@@ -1,0 +1,6 @@
+./a.out
+OK=$(echo $?)
+if [ $OK -eq 1 ]
+then
+   startx
+fi

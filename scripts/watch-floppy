@@ -1,0 +1,39 @@
+#!/bin/bash
+
+DIR='floppy'
+FOUND=false
+ok=0
+sudo dmesg -C
+
+while [ $FOUND == false ]; do
+  msg=$(dmesg | grep sda:)
+  if [ -n "$msg" ]; then
+    FOUND=true
+    echo "floppy detected!"
+    mount $DIR
+    if [ -f "floppy/docker-compose.yaml" ]; then
+      echo "Contains a compose file: $f"
+      if [ -f "floppy/init.sh" ]; then
+        ./floppy/init.sh
+      fi
+      cp floppy/docker-compose.yaml ~/app/
+      cd app && docker-compose up&
+
+      # dont startx until the image is built and running
+      while [[ $ok != 200 || -z $ok ]]; do
+        echo loading...
+        ok=$(curl -I localhost:3000 | head -n 1 | awk -F ' ' '{print $2}')
+        sleep 10
+      done
+      startx -- -nocursor
+
+    else
+      echo "bad file sad file, no YAML, at least not the kind I like, so it must be useless junk..."
+      umount /dev/sda
+      FOUND=false
+      sudo dmesg -C
+   fi
+  fi
+  echo "Sleeping... Dreaming of a less rigid disk..."
+  sleep 7
+done

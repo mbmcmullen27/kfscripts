@@ -1,0 +1,40 @@
+#!/bin/bash
+
+DIR='floppy'
+FOUND=false
+sudo dmesg -C
+clear
+echo "Sleeping..."
+
+while [ $FOUND == false ]; do
+  # check dmesg for drive discovery
+  msg=$(dmesg | grep sda)
+  if [ -n "$msg" ]; then
+    FOUND=true
+    echo "floppy detected!"
+
+    # mount the drive and check for a deployment file
+    sudo mount /dev/sda $DIR
+    if [ -f "floppy/deployment.yaml" ]; then
+      echo "Contains a deployment file: $f"
+
+      # run any included initialization scripts
+      if [ -f "floppy/init.sh" ]; then
+        ./floppy/init.sh
+      fi
+      
+      # apply the deployment
+      cp floppy/deployment.yaml ~/app/
+      # kubectl apply -f ~/app/deployment.yaml
+      python create.py
+
+    else
+      # unmount the drive and clear dmesg
+      echo "bad file sad file, no YAML, at least not the kind I like, so it must be useless junk..."
+      sudo umount /dev/sda
+      FOUND=false
+      sudo dmesg -C
+    fi
+  fi
+  sleep 5 
+done
